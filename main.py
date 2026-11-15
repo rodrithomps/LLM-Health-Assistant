@@ -5,8 +5,8 @@ from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from sqlalchemy import create_engine, Column, String, Integer
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from sqlalchemy import Column, String, Integer
+from sqlalchemy.orm import declarative_base, Session
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from datetime import datetime, timedelta
@@ -14,6 +14,7 @@ from pinecone import Pinecone
 from sentence_transformers import SentenceTransformer
 import os
 from dotenv import load_dotenv
+from backend.database import SessionLocal, engine
 from backend.health_chat import router as health_chat_router
 from backend.query_pubmed import router as query_pubmed_router
 from backend.voice_chat import router as voice_chat_router
@@ -22,9 +23,6 @@ from backend.voice_chat import router as voice_chat_router
 load_dotenv() 
 
 # ======== SQLite Settings ========
-DATABASE_URL = "sqlite:///./users.db"
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
 # ======== User Table ========
