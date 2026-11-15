@@ -1,52 +1,67 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 import base64
-import requests
-import os
+from io import BytesIO
 import logging
-
 import os
+
 from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+from gtts import gTTS
 
 load_dotenv() 
 
 router = APIRouter(prefix="/api/voice_chat", tags=["Voice Chat"])  # Using prefix and tags
 
-API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
-VOICE_API_KEY = os.getenv("ZHIPU_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 logging.basicConfig(level=logging.INFO)
-
-def encode_audio_to_base64(audio_file_path):
-    with open(audio_file_path, "rb") as audio_file:
-        return base64.b64encode(audio_file.read()).decode("utf-8")
 
 @router.post("/")
 async def voice_chat(file: UploadFile = File(...)):
     """
-    Receive user audio files, call the large model interface, and return text and audio responses
+    Analyze the user's audio with Gemini and return text with synthesized audio.
     """
-    audio_path = f"temp_{file.filename}"
+    if not GEMINI_API_KEY:
+        logging.error("GEMINI_API_KEY is not configured")
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not configured")
+
     try:
-        with open(audio_path, "wb") as buffer:
-            buffer.write(await file.read())
+        audio_data = await file.read()
+        if not audio_data:
+            raise HTTPException(status_code=400, detail="The uploaded audio file is empty.")
 
-        encoded_audio = encode_audio_to_base64(audio_path)
-        payload = {
-            "model": "glm-4-voice",
-            "messages": [{"role": "user", "content": [{"type": "input_audio", "input_audio": {"data": encoded_audio, "format": "wav"}}]}],
-            "max_tokens": 1024
-        }
-        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {VOICE_API_KEY}"}
+        mime_type = file.content_type or "audio/wav"
+        prompt = (
+            "You are a health assistant. Understand the user's speech and answer "
+            "concisely in the same language. Include a reminder that you are not "
+            "a substitute for professional medical advice."
+        )
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        response = client.models.generate_content(
+            model="gemini-3.5-flash-lite",
+            contents=[
+                types.Part.from_bytes(data=audio_data, mime_type=mime_type),
+                prompt,
+            ],
+            config=types.GenerateContentConfig(
+                temperature=0.5,
+                max_output_tokens=1024,
+            ),
+        )
+        text_response = response.text
+        if not text_response:
+            raise HTTPException(
+                status_code=502,
+                detail="Gemini returned no text for the uploaded audio.",
+            )
 
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=15)
-        os.remove(audio_path)
-
-        if response.status_code == 200:
-            result = response.json()
-            text_response = result.get("choices", [{}])[0].get("message", {}).get("content", "No text response received.")
-            audio_data_base64 = result.get("choices", [{}])[0].get("message", {}).get("audio", {}).get("data", "")
-            return {"response": text_response, "audio": audio_data_base64}
-        else:
-            raise HTTPException(status_code=500, detail=f"API Error: {response.status_code}, {response.text}")
+        audio_buffer = BytesIO()
+        gTTS(text=text_response, lang="en").write_to_fp(audio_buffer)
+        audio_data_base64 = base64.b64encode(audio_buffer.getvalue()).decode("ascii")
+        return {"response": text_response, "audio": audio_data_base64}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+        logging.exception("Voice chat processing failed")
+        raise HTTPException(status_code=500, detail=f"Voice chat processing failed: {e}") from e

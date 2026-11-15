@@ -4,93 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voice Chat</title>
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #2a5298, #1e3c72);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: #fff;
-        }
-        .chat-container {
-            width: 95%;
-            max-width: 800px;
-            background: rgba(240, 240, 240, 0.8);
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        .messages {
-            flex-grow: 1;
-            overflow-y: auto;
-            margin-bottom: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            background: rgba(240, 240, 240, 0.8);
-            height: 400px;
-        }
-        .message {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 20px;
-            max-width: 80%;
-        }
-        .user {
-            background: #00bcd4;
-            color: white;
-            align-self: flex-end;
-        }
-        .assistant {
-            background: #6a9fb5;
-            color: #fff;
-            align-self: flex-start;
-        }
-        button {
-            padding: 10px 20px;
-            margin: 5px;
-            background: #00bcd4;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: transform 0.2s ease, background 0.3s ease;
-        }
-        button:hover {
-            background: #0097a7;
-            transform: scale(1.1);
-        }
-        #back-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        #back-button:hover {
-            background: rgba(0, 0, 0, 0.8);
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="chat-page">
     <button id="back-button" onclick="goBack()">Back to Dashboard</button>
     <div class="chat-container">
         <div class="messages" id="chat-box"></div>
-        <div style="display: flex; justify-content: center;">
+        <div class="voice-controls">
             <button id="record-button" onclick="toggleRecording()">Start Recording</button>
             <button id="send-button" onclick="sendAudio()">Send</button>
         </div>
@@ -103,6 +24,66 @@
         let isRecording = false;
         let mediaRecorder;
         let audioChunks = [];
+
+        function encodeAudioBufferToWav(audioBuffer) {
+            const channelCount = audioBuffer.numberOfChannels;
+            const bytesPerSample = 2;
+            const blockAlign = channelCount * bytesPerSample;
+            const dataSize = audioBuffer.length * blockAlign;
+            const wavBuffer = new ArrayBuffer(44 + dataSize);
+            const view = new DataView(wavBuffer);
+            const writeString = (offset, value) => {
+                for (let i = 0; i < value.length; i++) {
+                    view.setUint8(offset + i, value.charCodeAt(i));
+                }
+            };
+
+            writeString(0, "RIFF");
+            view.setUint32(4, 36 + dataSize, true);
+            writeString(8, "WAVE");
+            writeString(12, "fmt ");
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, channelCount, true);
+            view.setUint32(24, audioBuffer.sampleRate, true);
+            view.setUint32(28, audioBuffer.sampleRate * blockAlign, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bytesPerSample * 8, true);
+            writeString(36, "data");
+            view.setUint32(40, dataSize, true);
+
+            const channels = Array.from(
+                { length: channelCount },
+                (_, channel) => audioBuffer.getChannelData(channel)
+            );
+            let offset = 44;
+            for (let i = 0; i < audioBuffer.length; i++) {
+                for (let channel = 0; channel < channelCount; channel++) {
+                    const sample = Math.max(-1, Math.min(1, channels[channel][i]));
+                    view.setInt16(
+                        offset,
+                        sample < 0 ? sample * 0x8000 : sample * 0x7fff,
+                        true
+                    );
+                    offset += bytesPerSample;
+                }
+            }
+
+            return new Blob([wavBuffer], { type: "audio/wav" });
+        }
+
+        async function convertRecordingToWav(chunks) {
+            const recordedBlob = new Blob(chunks);
+            const audioContext = new AudioContext();
+            try {
+                const decodedAudio = await audioContext.decodeAudioData(
+                    await recordedBlob.arrayBuffer()
+                );
+                return encodeAudioBufferToWav(decodedAudio);
+            } finally {
+                await audioContext.close();
+            }
+        }
 
         // Monitor page loading and restore chat history
         document.addEventListener("DOMContentLoaded", () => {
@@ -161,9 +142,17 @@
                 return;
             }
 
-            const blob = new Blob(audioChunks, { type: "audio/wav" });
+            let blob;
+            try {
+                blob = await convertRecordingToWav(audioChunks);
+            } catch (error) {
+                addMessage(`Error processing recording: ${error.message}`, "assistant");
+                saveMessage("assistant", `Error processing recording: ${error.message}`);
+                audioChunks = [];
+                return;
+            }
             const formData = new FormData();
-            formData.append("file", blob);
+            formData.append("file", blob, "recording.wav");
 
             addMessage("Sending audio...", "user");
             saveMessage("user", "Sending audio...");
@@ -187,7 +176,7 @@
                     saveMessage("assistant", textResponse);
 
                     if (audioBase64) {
-                        const audioBlob = await fetch(`data:audio/wav;base64,${audioBase64}`).then(res => res.blob());
+                        const audioBlob = await fetch(`data:audio/mpeg;base64,${audioBase64}`).then(res => res.blob());
                         const audioURL = URL.createObjectURL(audioBlob);
                         const audio = new Audio(audioURL);
                         audio.play();

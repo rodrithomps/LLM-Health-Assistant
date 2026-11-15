@@ -58,23 +58,23 @@ The system follows a **4-Layer Architecture** (not include presentation layer) t
    - Coordinates the overall business logic and invokes various APIs for task execution.
    - Core functionalities:
      - **User Authentication** (OAuth2 + JWT)
-     - **Text Chat Processing** (GLM-4-Plus)
-     - **Voice Processing** (GLM-4-Voice)
+     - **Text Chat Processing** (Gemini 3.5 Flash-Lite)
+     - **Voice Processing** (Gemini 3.5 Flash-Lite with speech synthesis)
      - **History Retrieval** (Pinecone)
      - **Medical Paper Search** (PubMed API)
    
 3. Business Logic Layer
    - Handles AI interaction, context retrieval, and query parsing.
    - Core functionalities:
-     - **LLM Processing** (GLM-4-Plus for intelligent responses)
+     - **LLM Processing** (Gemini 3.5 Flash-Lite for intelligent responses)
      - **Context Retrieval** (Pinecone for historical conversation storage)
      - **Query Handling** (PubMed API for medical paper retrieval)
   
 4. Adapter Services Layer
    - Manages interactions with external APIs and ensures system extensibility.
    - Key components:
-     - **GLM-4-Plus API** (Processes text-based queries)
-     - **GLM-4-Voice API** (Handles voice interactions)
+     - **Gemini API** (Processes text-based queries)
+     - **Gemini API and gTTS** (Handle voice interactions and speech synthesis)
      - **Pinecone Adapter** (Stores and retrieves user conversations)
      - **SQLite Adapter** (Manages user authentication and data)
      - **PubMed API** (Fetches the latest medical research)
@@ -82,8 +82,8 @@ The system follows a **4-Layer Architecture** (not include presentation layer) t
 5. Data Services Layer
 - Provides foundational AI and database services that power the application.
 - Key components:
-  - **GLM-4-Voice** (Processes speech input and generates voice responses)
-  - **GLM-4-Plus** (Handles text-based health queries and generates intelligent responses)
+  - **Gemini 3.5 Flash-Lite and gTTS** (Process speech input and generate voice responses)
+  - **Gemini 3.5 Flash-Lite** (Handles text-based health queries and generates intelligent responses)
   - **Pinecone** (Stores and retrieves user conversation history for context-aware interactions)
   - **PubMed** (Provides medical research data for evidence-based health consultations)
   - **SQLite** (Manages user authentication and stores basic user information)
@@ -110,8 +110,8 @@ The system follows a **4-Layer Architecture** (not include presentation layer) t
 - **Fetch API** (For frontend-backend communication)
 
 ### AI Models
-- **GLM-4-Plus** (Text-based health consultation)
-- **GLM-4-Voice** (Voice input processing)
+- **Gemini 3.5 Flash-Lite** (Text-based health consultation)
+- **Gemini 3.5 Flash-Lite + gTTS** (Voice input processing and audio responses)
 - **Sentence Transformer (all-MiniLM-L6-v2)** (Text embedding for context retrieval and semantic search)
 
 ### Development Tools
@@ -161,7 +161,7 @@ Create a `.env` file in the project root and add the following API keys:
 ```env
 # SECRET_KEY can be generated randomly by you.
 SECRET_KEY=your_secret_key
-ZHIPU_API_KEY=your_glm_api_key
+GEMINI_API_KEY=your_gemini_api_key
 PINECONE_API_KEY=your_pinecone_key
 ```
 For Pinecone configuration, set `index name=healthassistant`, set region as `us-east-1`, cloud as `AWS`.
@@ -206,7 +206,7 @@ Create a `.env` file in the project root and add the following API keys:
 ```env
 # SECRET_KEY can be generated randomly by you.
 SECRET_KEY=your_secret_key
-ZHIPU_API_KEY=your_glm_api_key
+GEMINI_API_KEY=your_gemini_api_key
 PINECONE_API_KEY=your_pinecone_key
 ```
 For Pinecone configuration, set `index name=healthassistant`, set region as `us-east-1`, cloud as `AWS`.

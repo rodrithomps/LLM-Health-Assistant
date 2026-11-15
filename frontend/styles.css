@@ -1,75 +1,352 @@
-body {
-    font-family: 'Roboto', sans-serif;
-    background: radial-gradient(circle, #98c1d4 0%, #5583d2 100%); /* 径向渐变 */
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+:root {
+    font-family: 'Roboto', 'Segoe UI', sans-serif;
     color: #333;
-    transition: background 0.3s ease, color 0.3s ease;
+    background: #5583d2;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+
+    --blue: #007bff;
+    --blue-hover: #0056b3;
+    --chat-blue: #00bcd4;
+    --chat-blue-hover: #0097a7;
+    --card: #fff;
+    --field: #f7f9fc;
+    --field-border: #d7e1ef;
+    --text: #333;
+    --shadow: 0 16px 40px rgba(18, 48, 91, 0.22);
+    --shadow-hover: 0 20px 44px rgba(18, 48, 91, 0.28);
+    --radius: 16px;
 }
 
-.login-container, .dashboard-container, .chat-container {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 40px 30px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+* {
+    box-sizing: border-box;
+}
+
+body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    padding: 32px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    background: radial-gradient(circle, #98c1d4 0%, #5583d2 100%);
+}
+
+.login-container,
+.dashboard-container,
+.chat-container {
+    width: min(100%, 520px);
+    min-height: 150px;
+    padding: 40px;
     text-align: center;
-    width: 500px;
-    min-height: 150px; 
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    transition: background 0.3s ease, color 0.3s ease;
+    background: var(--card);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.dashboard-container:hover,
+.chat-container:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+.chat-page {
+    background: linear-gradient(135deg, #2a5298, #1e3c72);
+    color: #fff;
+}
+
+.health-chat-page .chat-container {
+    height: min(840px, calc(100vh - 64px));
+    height: min(840px, calc(100dvh - 64px));
+}
+
+.chat-container {
+    width: min(100%, 840px);
+    min-height: 0;
+    max-height: calc(100vh - 64px);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
 }
 
 h1 {
-    font-size: 32px;
-    margin-bottom: 20px;
-    color: #007bff;
+    margin: 0 0 24px;
+    color: var(--blue);
+    font-size: clamp(1.65rem, 4vw, 2rem);
+    line-height: 1.2;
 }
 
-input {
-    width: calc(100% - 20px);
-    padding: 12px;
-    margin: 12px 10px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    font-size: 16px;
-    background-color: #f7f9fc;
-    color: #333;
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.dashboard-container #welcome-message {
+    margin: 18px 0 30px;
+}
+
+input,
+textarea {
+    width: 100%;
+    min-width: 0;
+    padding: 13px 15px;
+    color: var(--text);
+    background: var(--field);
+    border: 1px solid var(--field-border);
+    border-radius: 12px;
     outline: none;
+    font: inherit;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 }
 
-input:focus {
-    border-color: #007bff;
-    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);
-    background-color: #ffffff;
+input:focus,
+textarea:focus {
+    background: #fff;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.14);
 }
 
 button {
-    margin: 5px;
-    padding: 10px 20px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 15px;
-    font-size: 16px;
+    min-height: 44px;
+    margin: 0;
+    padding: 11px 20px;
+    color: #fff;
+    background: var(--blue);
+    border: 0;
+    border-radius: 12px;
+    box-shadow: 0 5px 12px rgba(0, 86, 179, 0.2);
     cursor: pointer;
-    transition: transform 0.2s ease, background 0.3s ease;
+    font: inherit;
+    font-weight: 600;
+    transition: all 0.3s ease;
 }
 
 button:hover {
-    transform: scale(1.05);
-    background: #0056b3;
+    background: var(--blue-hover);
+    box-shadow: 0 9px 18px rgba(0, 86, 179, 0.28);
+    transform: translateY(-2px);
 }
 
+button:active {
+    box-shadow: 0 3px 8px rgba(0, 86, 179, 0.2);
+    transform: translateY(0);
+}
 
+button:focus-visible {
+    outline: 3px solid rgba(0, 123, 255, 0.35);
+    outline-offset: 3px;
+}
+
+.button-group,
 .dashboard-buttons {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
-    gap: 15px;
+    gap: 14px;
+}
+
+.dashboard-container #user-info-btn {
+    display: block;
+    margin-left: auto;
+}
+
+#back-button {
+    position: fixed;
+    z-index: 1;
+    top: 20px;
+    left: 20px;
+    background: var(--chat-blue);
+}
+
+#back-button:hover {
+    background: var(--chat-blue-hover);
+}
+
+.messages {
+    flex: 1 1 auto;
+    min-height: 240px;
+    max-height: min(60vh, 560px);
+    margin-bottom: 20px;
+    padding: 18px;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    box-shadow: inset 0 2px 8px rgba(18, 48, 91, 0.08);
+    scrollbar-color: #8eb6e8 transparent;
+    scrollbar-width: thin;
+}
+
+.message {
+    width: fit-content;
+    max-width: min(82%, 620px);
+    margin: 12px 0;
+    padding: 12px 16px;
+    border-radius: 16px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.message.user {
+    margin-left: auto;
+    color: #fff;
+    background: var(--chat-blue);
+    border-bottom-right-radius: 5px;
+}
+
+.message.assistant {
+    margin-right: auto;
+    color: #fff;
+    background: #6a9fb5;
+    border-bottom-left-radius: 5px;
+}
+
+.chat-input-row,
+.voice-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chat-input-row input {
+    flex: 1;
+}
+
+.health-chat-page .messages {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none;
+    background: #f7f9fc;
+    border-color: #e5edf7;
+    overscroll-behavior-y: contain;
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+}
+
+.health-chat-page .message.user {
+    background: var(--chat-blue);
+}
+
+.health-chat-page .message.assistant {
+    color: #333;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(18, 48, 91, 0.08);
+}
+
+.health-chat-page .message.assistant p,
+.health-chat-page .message.assistant ul,
+.health-chat-page .message.assistant ol,
+.health-chat-page .message.assistant h3 {
+    margin: 0 0 8px;
+}
+
+.health-chat-page .message.assistant ul,
+.health-chat-page .message.assistant ol {
+    padding-left: 20px;
+}
+
+.health-chat-page .message.assistant li {
+    margin-bottom: 8px;
+}
+
+.health-chat-page .message.assistant > :last-child {
+    margin-bottom: 0;
+}
+
+.health-chat-page .message.assistant h3 {
+    font-size: 1.05rem;
+    line-height: 1.4;
+}
+
+.health-chat-page .chat-input-row {
+    flex: 0 0 auto;
+    padding-top: 14px;
+    background: #fff;
+}
+
+.health-chat-page .chat-input-row input {
+    min-height: 48px;
+    border-radius: 14px;
+}
+
+.health-chat-page .chat-input-row button {
+    min-height: 48px;
+}
+
+.chat-page button:not(#back-button) {
+    background: var(--chat-blue);
+}
+
+.chat-page button:not(#back-button):hover {
+    background: var(--chat-blue-hover);
+    box-shadow: 0 9px 18px rgba(0, 151, 167, 0.28);
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 20px 14px;
+    }
+
+    .login-container,
+    .dashboard-container {
+        padding: 28px 22px;
+    }
+
+    .chat-container {
+        max-height: calc(100vh - 40px);
+        padding: 18px;
+        margin-top: 40px;
+    }
+
+    .health-chat-page .chat-container {
+        height: calc(100vh - 80px);
+        height: calc(100dvh - 80px);
+        max-height: none;
+    }
+
+    #back-button {
+        top: 12px;
+        left: 14px;
+    }
+
+    .messages {
+        min-height: 180px;
+        padding: 12px;
+    }
+
+    .chat-input-row,
+    .voice-controls {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .health-chat-page .chat-input-row {
+        align-items: center;
+        flex-direction: row;
+    }
+
+    .chat-input-row button,
+    .voice-controls button {
+        width: 100%;
+    }
+
+    .health-chat-page .chat-input-row button {
+        width: auto;
+    }
+
+    .health-chat-page .messages {
+        min-height: 0;
+    }
+
+    .message {
+        max-width: 92%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
 }

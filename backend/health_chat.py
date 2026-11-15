@@ -9,6 +9,8 @@ from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone
 import os
 from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 
 # Load environment variables
 load_dotenv() 
@@ -19,9 +21,8 @@ logging.basicConfig(level=logging.INFO)
 # Initialize APIRouter
 router = APIRouter(prefix="/api/health_chat", tags=["Health Chat"])
 
-# ====== Zhipu API Configuration ======
-ZHIPU_API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
-ZHIPU_API_KEY = os.getenv("ZHIPU_API_KEY")
+# ====== Gemini API Configuration ======
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # ====== Pinecone Configuration ======
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
@@ -125,7 +126,7 @@ def store_chat_in_pinecone(username: str, user_input: str, model_response: str):
     except Exception as e:
         logging.error(f"Error storing chat in Pinecone: {e}")
 
-@router.post("/")
+@router.post("")
 def chat_with_model(request: ChatRequest, token: str = Depends(oauth2_scheme)):
     """
     Processing users' health consultation requests
@@ -161,23 +162,24 @@ def chat_with_model(request: ChatRequest, token: str = Depends(oauth2_scheme)):
     # print("Final prompt")
     # print(final_prompt)
 
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {ZHIPU_API_KEY}"
-    }
-    payload = {
-        "model": "glm-4-plus",
-        "messages": [{"role": "user", "content": final_prompt}],
-        "temperature": 0.5,
-        "max_tokens": 1000
-    }
+    if not GEMINI_API_KEY:
+        logging.error("GEMINI_API_KEY is not configured")
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not configured")
 
-    response = requests.post(ZHIPU_API_URL, headers=headers, json=payload)
+    try:
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        response = client.models.generate_content(
+            model="gemini-3.5-flash-lite",
+            contents=final_prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.5,
+                max_output_tokens=1000,
+            ),
+        )
+        model_response = response.text or ""
+    except Exception as e:
+        logging.error(f"Gemini API Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Gemini API Error: {e}") from e
 
-    if response.status_code == 200:
-        model_response = response.json().get("choices", [{}])[0].get("message", {}).get("content", "")
-        store_chat_in_pinecone(username, user_input, model_response)
-        return {"response": model_response}
-    else:
-        logging.error(f"Zhipu API Error: {response.status_code}, {response.text}")
-        raise HTTPException(status_code=500, detail=f"Zhipu API Error: {response.status_code}, {response.text}")
+    store_chat_in_pinecone(username, user_input, model_response)
+    return {"response": model_response}

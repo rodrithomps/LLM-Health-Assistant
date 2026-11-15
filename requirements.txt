@@ -21,6 +21,8 @@ python-dotenv==1.0.1  # Load environment variables from .env file
 requests==2.32.3
 httpx==0.27.0
 aiohttp==3.11.12  # Asynchronous HTTP client
+google-genai>=1.0.0,<3.0.0
+gTTS==2.5.4
 
 # Pinecone Integration
 pinecone==5.1.0
