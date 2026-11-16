@@ -42,7 +42,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # ======== JWT Configuration ========
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 1 # Expiration time (x min)
+ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # Expiration time (24 hours)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
