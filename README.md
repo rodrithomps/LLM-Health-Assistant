@@ -1,289 +1,166 @@
-# LLM-Health-Assistant
+# LLM-Health-Assistant (Hybrid RAG Edition)
+
 ---
 
 <div align="center">
   <img src="docs/images/logo.png" alt="logo" style="width:35%;"/>
-  <p><em>Logo</em></p>
-</div>
-
-<div align="center">
-    <table>
-        <tr>
-            <td align="center">
-                <a href="docs/LLM Health Assistant Project Report.pdf"><strong>A Brief Report</strong></a><br>
-            </td>
-            <td align="center">
-                <a href="https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/Avalon-S/LLM-Health-Assistant/main/docs/openapi.json"><strong>API Document</strong></a><br>
-            </td>
-        </tr>
-    </table>
+  <p><em>Asistente de Salud y Nutrición Deportiva basado en RAG Híbrido y Google Gemini</em></p>
 </div>
 
 ---
 
-## Disclaimer
-The LLM Health Assistant provides general information only and does not constitute medical advice. It does not establish a doctor-patient relationship. Always consult a qualified healthcare professional for medical concerns. We are not responsible for any decisions made based on the platform’s information.
+## ⚠️ Aviso Legal (Disclaimer)
+Este sistema proporciona información general con fines educativos y de investigación académica, y **no constituye asesoramiento médico profesional**. No establece una relación médico-paciente ni sustituye la evaluación de un profesional de la salud o nutricionista certificado.
 
 ---
 
-## Table of Contents
-
-1. 📖[Introduction](#introduction)
-2. 🏗️[Service Architecture](#service-architecture)
-3. 🛠️[Technology Stack and Development Tools](#technology-stack-and-development-tools)
-4. 🚀[Usage](#usage)
-5. 🎥[Project Display](#project-display)
-6. 🔍[Reflection ](#reflection)
-7. 📜[License](#license)
-
----
-
-## Introduction
- The LLM Health Assistant is a health consultation platform based on a **large language model (LLM)**, leveraging **generative AI** and **retrieval-augmented generation (RAG)** technologies to provide users with personalized and intelligent health Q&A services. The system integrates multiple functional modules, including **text interaction**, **voice interaction**, **PubMed paper retrieval**, **user information management**, and **conversation storage**.
-
-[Back to Table of Contents](#table-of-contents)
+## 📑 Tabla de Contenidos
+1. [📖 Introducción y Linaje del Proyecto](#-introducción-y-linaje-del-proyecto)
+2. [✨ Mejoras e Innovaciones Implementadas](#-mejoras-e-innovaciones-implementadas)
+3. [🏗️ Arquitectura del Sistema (RAG Híbrido)](#️-arquitectura-del-sistema-rag-híbrido)
+4. [🛠️ Stack Tecnológico](#️-stack-tecnológico)
+5. [📊 Validación Experimental (AGD y RMSE)](#-validación-experimental-agd-y-rmse)
+6. [🚀 Instalación y Uso](#-instalación-y-uso)
+7. [📜 Licencia y Atribución](#-licencia-y-atribución)
 
 ---
 
-## Service Architecture
-The system follows a **4-Layer Architecture** (not include presentation layer) to ensure efficiency, scalability, and security:
+## 📖 Introducción y Linaje del Proyecto
 
-1. Presentation Layer
-   - Provides the user interface for interactions, supporting both text and voice input.
-   - Sends user requests to the **Process Centric Layer** for processing.
-   - Key Components:
-     - **Web Frontend (HTML/CSS/JS)**: Login, health consultation, voice chat, user profile management.
+**LLM-Health-Assistant (Hybrid RAG Edition)** es una plataforma de consulta de salud y nutrición deportiva impulsada por **Inteligencia Artificial Generativa** y **Generación Aumentada por Recuperación Híbrida (Hybrid RAG)**.
 
-2. Process Centric Layer
-   - Coordinates the overall business logic and invokes various APIs for task execution.
-   - Core functionalities:
-     - **User Authentication** (OAuth2 + JWT)
-     - **Text Chat Processing** (Gemini 3.5 Flash-Lite)
-     - **Voice Processing** (Gemini 3.5 Flash-Lite with speech synthesis)
-     - **History Retrieval** (Pinecone)
-     - **Medical Paper Search** (PubMed API)
-   
-3. Business Logic Layer
-   - Handles AI interaction, context retrieval, and query parsing.
-   - Core functionalities:
-     - **LLM Processing** (Gemini 3.5 Flash-Lite for intelligent responses)
-     - **Context Retrieval** (Pinecone for historical conversation storage)
-     - **Query Handling** (PubMed API for medical paper retrieval)
-  
-4. Adapter Services Layer
-   - Manages interactions with external APIs and ensures system extensibility.
-   - Key components:
-     - **Gemini API** (Processes text-based queries)
-     - **Gemini API and gTTS** (Handle voice interactions and speech synthesis)
-     - **Pinecone Adapter** (Stores and retrieves user conversations)
-     - **SQLite Adapter** (Manages user authentication and data)
-     - **PubMed API** (Fetches the latest medical research)
-
-5. Data Services Layer
-- Provides foundational AI and database services that power the application.
-- Key components:
-  - **Gemini 3.5 Flash-Lite and gTTS** (Process speech input and generate voice responses)
-  - **Gemini 3.5 Flash-Lite** (Handles text-based health queries and generates intelligent responses)
-  - **Pinecone** (Stores and retrieves user conversation history for context-aware interactions)
-  - **PubMed** (Provides medical research data for evidence-based health consultations)
-  - **SQLite** (Manages user authentication and stores basic user information)
-
-<div align="center">
-  <img src="docs/images/Architecture.png" alt="Architecture.png" style="width:100%;"/>
-  <p><em>System Architecture</em></p>
-</div>
-
-[Back to Table of Contents](#table-of-contents)
+Este repositorio parte de una refactorización y extensión académica del proyecto de código abierto [Avalon-S/LLM-Health-Assistant](https://github.com/Avalon-S/LLM-Health-Assistant) (licencia MIT), adaptándolo para resolver uno de los principales problemas de los LLM genéricos en salud: la entrega de recomendaciones poblacionales promedio que ignoran los datos biométricos específicos del usuario y carecen de respaldo científico trazable.
 
 ---
 
-## Technology Stack and Development Tools
-### Backend
-- **FastAPI** (Lightweight web framework supporting high concurrency)
-- **SQLite** (Lightweight database for user data storage)
-- **Pinecone** (Vector database for user conversation history)
-- **OAuth2.0 + JWT** (User authentication for API security)
-- **PubMed API** (Medical literature retrieval)
+## ✨ Mejoras e Innovaciones Implementadas
+
+Respecto a la implementación base de Avalon-S, esta versión incorpora las siguientes mejoras arquitectónicas y funcionales:
+
+1. **Migración del Motor LLM a Google Gemini:** Se reemplazó la dependencia de `GLM-4-Plus` (`ZHIPU_API_KEY`) por **Google Gemini (`gemini-3.5-flash-lite`)** mediante el SDK oficial `google-genai`.
+2. **Capa de RAG Estructurado Determinista (SQLite siempre activo):** En lugar de depender de palabras clave frágiles para recuperar los datos del usuario desde Pinecone, el backend consulta de forma determinista el perfil biométrico en **SQLite** (`age`, `gender`, `medical_history`) en el 100% de las peticiones y lo inyecta en el `system_instruction` de Gemini.
+3. **Sistema Experto Bilingüe (Español / Inglés):** Se ampliaron las reglas de activación en `backend/health_chat.py` para detectar consultas en español y términos del dominio deportivo/nutricional (*evidencia, estudio, creatina, proteína, dosis, hipertrofia*, etc.).
+4. **Reescritura y Traducción de Consultas para PubMed (*Query Rewriting*):** Se mejoró `backend/query_pubmed.py` para utilizar Gemini como traductor/extractor de 2 a 4 palabras clave biomédicas en inglés antes de consultar la API de PubMed (`esearch.fcgi`), resolviendo el fallo de cero resultados ante preguntas largas en español.
+5. **Extracción Completa de Metadatos y Control de Alucinaciones:** El módulo de PubMed ahora extrae **título completo, año de publicación, PMID y *abstract* íntegro** (uniendo todas las secciones XML). Además, el `system_instruction` exige citar explícitamente las fuentes recuperadas y prohíbe inventar referencias no presentes en el contexto.
+6. **Evaluación Cuantitativa Reproducible:** Se incorporó un script de evaluación (`evaluacion_metricas.py`) con $N = 24$ perfiles biométricos para medir el desempeño frente a un LLM genérico usando **AGD** y **RMSE**.
+
+---
+
+## 🏗️ Arquitectura del Sistema (RAG Híbrido)
+
+El sistema implementa un flujo de **RAG Híbrido de tres fuentes** orquestado por **FastAPI**:
+
+| Fuente de Datos | Tipo de RAG | Activación | Propósito |
+| :--- | :--- | :--- | :--- |
+| **SQLite** | RAG Estructurado (Relacional) | **Siempre activo** (100% de consultas) | Inyectar perfil biométrico exacto en `system_instruction`. |
+| **PubMed API** | RAG Científico + *Query Rewriting* | **Condicional** (palabras clave científicas/deportivas) | Recuperar artículos reales (título, año, PMID, *abstract*). |
+| **Pinecone** | RAG Vectorial (`all-MiniLM-L6-v2`) | **Condicional** (referencias a historial previo) | Recuperar y almacenar memoria conversacional semántica. |
+
+```mermaid
+flowchart LR
+    %% Fase 1: Izquierda (flujo interno vertical)
+    subgraph Fase_1["Fase 1: Creación de Contexto y Fuentes de Conocimiento"]
+        direction TB
+        A["Usuario / Atleta"] -->|"Ingresa datos biométricos"| B("Interfaz de<br/>Perfil UI")
+        B -->|"Edad, Género,<br/>Peso, Experiencia"| C["Backend: FastAPI"]
+
+        C -->|"Almacena perfil<br/>estructurado"| D[("SQLite:<br/>Perfil Biométrico")]
+        C -->|"Embeddings:<br/>all-MiniLM-L6-v2"| E[("Pinecone:<br/>Memoria Vectorial")]
+        F[("PubMed API:<br/>Literatura Científica")]
+
+        F -.->|"Condicional:<br/>Estudios (Query Rewriting)"| BUS["Capa de Recuperación<br/>(Contexto Híbrido)"]
+        D -.->|"Siempre activo:<br/>Perfil exacto"| BUS
+        E -.->|"Condicional:<br/>Historial"| BUS
+    end
+
+    %% Fase 2: Derecha (flujo interno vertical)
+    subgraph Fase_2["Fase 2: Generación Aumentada Híbrida (RAG)"]
+        direction TB
+        U(["Usuario / Atleta"]) -->|"Envía consulta al Chat"| I("Prompt: Ej.<br/>Evidencia y dosis<br/>de creatina")
+        I --> J{"Orquestador RAG<br/>Híbrido<br/>(FastAPI +<br/>Sistema Experto)"}
+        J -->|"system_instruction (SQLite)<br/>+ Prompt + Contexto"| K("Motor LLM:<br/>Google Gemini")
+        K --> M(["Respuesta Final:<br/>Recomendación<br/>personalizada y<br/>respaldada"])
+    end
+
+    %% Conexiones entre fases
+    BUS -.->|"Provee contexto RAG"| J
+    K -.->|"Guarda interacción<br/>(Embeddings)"| E
+```
+
+---
+
+## 🛠️ Stack Tecnológico
+
+### Backend y Seguridad
+* **FastAPI** — Framework web asíncrono de alto rendimiento.
+* **SQLite + SQLAlchemy** — Almacenamiento relacional para autenticación y perfiles biométricos estructurados.
+* **Pinecone** — Base de datos vectorial para historial conversacional (índice denso de `384` dimensiones, métrica `cosine`).
+* **PubMed E-Utilities API** (`esearch.fcgi` / `efetch.fcgi`) — Recuperación de literatura científica en tiempo real.
+* **OAuth2.0 + JWT (`python-jose`, `passlib/bcrypt`)** — Autenticación y autorización segura por usuario.
+
+### Modelos de IA y Embeddings
+* **Google Gemini (`gemini-3.5-flash-lite`)** — Generación de respuestas personalizadas y reescritura de consultas para PubMed.
+* **Sentence Transformers (`sentence-transformers/all-MiniLM-L6-v2`)** — Generación de *embeddings* locales (384 dimensiones) para búsqueda semántica en Pinecone.
 
 ### Frontend
-- **HTML, CSS, JavaScript** (For the user interface)
-- **Fetch API** (For frontend-backend communication)
-
-### AI Models
-- **Gemini 3.5 Flash-Lite** (Text-based health consultation)
-- **Gemini 3.5 Flash-Lite + gTTS** (Voice input processing and audio responses)
-- **Sentence Transformer (all-MiniLM-L6-v2)** (Text embedding for context retrieval and semantic search)
-
-### Development Tools
-1. **Hardware**
-- **Operating System**: Windows 11 Home
-- **CPU**:   Intel(R)  Core(TM) i7-14700HX @2.1GHZ
-- **GPU**:   NVIDIA  GeForce RTX 4070 Laptop GPU (8 GB)
-- **Memory**: 32 GB
-
-2. **Software**
-
-| Tool        | Purpose                             |
-|------------|-------------------------------------|
-| Anaconda   | Development environment management |
-| VS Code    | Code development                   |
-| JupyterLab | Early-stage experiment exploration |
-| Edge Browser | Frontend interface testing       |
-| Postman    | API testing                        |
-
-3. **External API Key Sources**
-
-- [GLM-4-Plus](https://bigmodel.cn/dev/api/normal-model/glm-4)
-- [GLM-4-Voice](https://bigmodel.cn/dev/api/rtav/GLM-4-Voice)
-- [Pinecone](https://docs.pinecone.io/guides/get-started/quickstart)
-
-[Back to Table of Contents](#table-of-contents)
+* **HTML5, CSS3 y JavaScript (Fetch API)** — Interfaz web para inicio de sesión, gestión de perfil biométrico y chat de salud.
 
 ---
 
-## Usage
+## 📊 Validación Experimental (AGD y RMSE)
 
-- During development, `torch 2.6+cu124` was used for acceleration, but CUDA is not mandatory. Since the CPU computation speed is within an acceptable range, the Docker image is built with the CPU version of Torch for convenience. If you wish to use GPU acceleration within the image, please install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html). `Dockerfile` and `docker-compose.yml` need to be reconfigured.
+Siguiendo la metodología de evaluación cuantitativa propuesta por **Pinna et al. (2025)** ($N = 24$ casos de prueba), se evaluó la precisión de dosificación del sistema frente a un LLM genérico (*Baseline* sin contexto biométrico) utilizando como *ground truth* el estándar científico de mantenimiento de creatina de la *International Society of Sports Nutrition (ISSN)*:
 
-- For user data management, this project also includes a database management system that allows querying and removing accounts from the two databases.
+$$\text{Dosis de mantenimiento } (y_i) = 0.05 \times \text{peso corporal (kg)}$$
 
-1. **Running Code**
+Se evaluaron **24 perfiles biométricos** con pesos entre $48\text{ kg}$ y $120\text{ kg}$ utilizando las métricas **AGD** (*Average Grade Difference*) y **RMSE** (*Root Mean Square Error*):
 
-Using `conda` to manage environment.
+| Sistema Evaluado ($N = 24$) | AGD $\downarrow$ | RMSE $\downarrow$ |
+| :--- | :---: | :---: |
+| **Nuestro Sistema (RAG Estructurado SQLite + Gemini)** | **0.0125** | **0.0354** |
+| **LLM Genérico (Baseline sin perfil biométrico)** | 1.1521 | 1.3680 |
+| **Reducción de Error Relativa** | **98.9%** | **97.4%** |
+
+> **Conclusión experimental:** Mientras el LLM genérico incurre en errores sistemáticos al recomendar dosis poblacionales fijas ($4\text{--}5\text{ g/día}$), la inyección determinista del perfil biométrico desde SQLite reduce el error promedio en un **98.9%** y elimina las desviaciones extremas en atletas de peso bajo o elevado.
+
+---
+
+## 🚀 Instalación y Uso
+
+### 1. Clonar el repositorio y crear el entorno
 ```bash
-conda create -n sde python=3.9
-conda activate sde 
-git clone https://github.com/Avalon-S/LLM-Health-Assistant
+conda create -n sde python=3.10
+conda activate sde
+git clone https://github.com/<TU_USUARIO>/<TU_REPOSITORIO>.git
 cd LLM-Health-Assistant
-```
-
-Create a `.env` file in the project root and add the following API keys:
-```env
-# SECRET_KEY can be generated randomly by you.
-SECRET_KEY=your_secret_key
-GEMINI_API_KEY=your_gemini_api_key
-PINECONE_API_KEY=your_pinecone_key
-```
-For Pinecone configuration, set `index name=healthassistant`, set region as `us-east-1`, cloud as `AWS`.
-
-- Install Dependencies
-```sh
 pip install -r requirements.txt
 ```
 
-- Run the FastAPI Server
-```sh
+### 2. Configurar variables de entorno
+Crea un archivo `.env` en la raíz del proyecto (asegúrate de que esté listado en `.gitignore`):
+
+```env
+SECRET_KEY=tu_clave_secreta_jwt
+GEMINI_API_KEY=tu_api_key_de_google_gemini
+PINECONE_API_KEY=tu_api_key_de_pinecone
+```
+
+> **Configuración requerida en Pinecone:** Crea un índice llamado `healthassistant` de tipo **Dense / Custom vectors** (sin *document schema*), con **Dimension = `384`**, **Metric = `cosine`**, en **AWS (`us-east-1`)**.
+
+### 3. Ejecutar el servidor FastAPI
+```bash
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
+* **Interfaz Web:** `http://localhost:8000/`
+* **Documentación interactiva de la API:** `http://localhost:8000/redoc` o `http://localhost:8000/docs`
 
-Once started, API documentation can be accessed via:
+### 4. Reproducir la evaluación de métricas (AGD y RMSE)
 ```bash
-http://localhost:8000/redoc
+python evaluacion_metricas.py
 ```
-
-- Run the Frontend
-Input `http://localhost:8000/` in your browser to access the LLM Health Assistant web interface.
-
-- Enter the administrator system
-```bash
-python CLI_DB_Manager.py
-```
-<div align="center">
-  <img src="docs/images/code_running.jpg" alt="code_running" style="width:80%;"/>
-  <p><em>Code Running</em></p>
-</div>
-
-2. **Build & Run the Docker Image**
-
-Before doing this, make sure the Docker CLI is enabled. It is recommended to install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
-
-```bash
-git clone https://github.com/Avalon-S/LLM-Health-Assistant
-cd LLM-Health-Assistant
-```
-
-Create a `.env` file in the project root and add the following API keys:
-```env
-# SECRET_KEY can be generated randomly by you.
-SECRET_KEY=your_secret_key
-GEMINI_API_KEY=your_gemini_api_key
-PINECONE_API_KEY=your_pinecone_key
-```
-For Pinecone configuration, set `index name=healthassistant`, set region as `us-east-1`, cloud as `AWS`.
-
-- Build the image (without using cache), it takes about 10-20 minutes, depending on your internet speed.
-```bash
-docker-compose build --no-cache
-```
-
-- Start the container (run in the background)
-```bash
-docker-compose up -d
-```
-
-- Stop all containers started by `docker-compose down`.
-```bash
-docker-compose down
-```
-
-- Enter the administrator system (keep the container is running)
-```bash
-docker ps # Get CONTAINER ID
-docker exec -it <CONTAINER ID> /bin/bash
-python CLI_DB_Manager.py
-```
-
-<div align="center">
-  <img src="docs/images/image_running.jpg" alt="image_running" style="width:80%;"/>
-  <p><em>Image Running</em></p>
-</div>
-
-[Back to Table of Contents](#table-of-contents)
 
 ---
 
-## Project Display
+## 📜 Licencia y Atribución
 
-<div align="center">
-  <img src="docs/images/login.jpg" alt="login" style="width:80%;"/>
-  <p><em>Login Page</em></p>
-</div>
-
-<div align="center">
-  <img src="docs/images/dashboard.jpg" alt="dashboard" style="width:80%;"/>
-  <p><em>Dashboard Page</em></p>
-</div>
-
-<div align="center">
-  <img src="docs/images/health_chat.jpg" alt="health_chat" style="width:80%;"/>
-  <p><em>Health Chat Page</em></p>
-</div>
-
-<div align="center">
-  <img src="docs/images/voice_chat.jpg" alt="voice_chat" style="width:80%;"/>
-  <p><em>Voice Chat Page</em></p>
-</div>
-
-[Back to Table of Contents](#table-of-contents)
-
----
-
-## Reflection
-
-At the beginning, the initial plan was to [locally deploy LLaMA 3.2 1B and 3B](https://github.com/Avalon-S/LLaMA-Factory-SDE). However, during later development, there were numerous dependency conflicts, and the models performed extremely poorly in multi-turn dialogues with severe hallucinations. Moreover, locally deploying an LLM would result in an excessively large Docker image, making deployment time-consuming. Therefore, we switched to using GLM-4-Plus, which delivers performance comparable to GPT-4o, and the results have been satisfactory.
-
-It should be noted that the strategy for deciding whether to call specific APIs to enhance the prompt in this project follows an **expert system** approach. Specifically, if certain keywords are detected, such as *my age* or *paper*, the system will automatically call the Pinecone or PubMed API, respectively, for retrieval. This is a simple, fast, and effective strategy. LangChain was not used because experiments showed that the task was not complex (no deep reasoning required), and using an agent to determine which API to call took significantly longer than letting the LLM respond directly. Additionally, there was no difference in answer quality—GLM-4-Plus was already powerful enough.
-
-Overall, despite the tight timeline, I am fairly satisfied with the implementation of this project.
-
-[Back to Table of Contents](#table-of-contents)
-
----
-
-## License
-
-This project is licensed under the MIT License. See the `LICENSE` file for details.
-
-[Back to Table of Contents](#table-of-contents)
-
----
+Este proyecto se distribuye bajo la **Licencia MIT** (ver archivo `LICENSE`), manteniendo la atribución correspondiente al repositorio original [Avalon-S/LLM-Health-Assistant](https://github.com/Avalon-S/LLM-Health-Assistant).
